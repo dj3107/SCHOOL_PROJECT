@@ -1,0 +1,5 @@
+numpy
+requests
+sounddevice
+PyQt6
+openai-whisper
