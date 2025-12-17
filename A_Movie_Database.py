@@ -492,6 +492,15 @@ def get_tmdb_episode_external_ids(tv_id, season_number, episode_number):
     data = _tmdb_get(f"tv/{tv_id}/season/{season_number}/episode/{episode_number}/external_ids")
     return data or {}
 
+def get_tmdb_title_recommendations(tmdb_id, media_type="movie", limit=12, page=1):
+    """
+    Uses:
+      https://api.themoviedb.org/3/{movie|tv}/{tmdb_id}/recommendations
+    """
+    if not tmdb_id:
+        return []
+    data = _tmdb_get(f"{media_type}/{tmdb_id}/recommendations", {"page": page})
+    return (data.get("results", []) or [])[:limit]
 
 # =================================================
 # WHISPER THREAD
@@ -1614,6 +1623,26 @@ class MainWindow(QMainWindow):
 
         self.main_layout.addWidget(details_widget)
         self.current_details_dialog = dialog
+
+        recs = get_tmdb_title_recommendations(dialog.media_id, dialog.media_type, limit=12)
+
+        if recs:
+            rec_label = QLabel("🎬 Recommended Movies" if dialog.media_type == "movie" else "📺 Recommended TV Shows")
+            rec_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+            details_layout.addWidget(rec_label)
+
+            rec_scroll = QScrollArea()
+            rec_scroll.setWidgetResizable(True)
+            rec_scroll.setFixedHeight(350)
+
+            rec_grid = QWidget()
+            rec_layout = QGridLayout(rec_grid)
+            rec_layout.setSpacing(15)
+            rec_scroll.setWidget(rec_grid)
+            details_layout.addWidget(rec_scroll)
+
+            for col, item in enumerate(recs):
+                self.add_poster_button(rec_layout, item, dialog.media_type, col)
 
 
 # =================================================
